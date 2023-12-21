@@ -85,15 +85,20 @@ app.get("/images", (req, res) => {
   s3Client
     .send(new ListObjectsV2Command(listObjectsParams))
     .then((listObjectsResponse) => {
-      res.send(listObjectsResponse);
+      res.setHeader("Content-Type", "application/json"); 
+      res.json(listObjectsResponse);
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).json({ error: "The image get isn't working" });
     });
 });
 
 // Multer middleware for file upload to S3
 const upload = multer({
   storage: multerS3({
-    s3: s3,
-    bucket: bucketName,
+    s3: s3Client,
+    bucket: "my-cool-bucke",
     acl: 'public-read',
     key: function (req, file, cb) {
       cb(null, Date.now().toString() + file.originalname);
@@ -113,7 +118,7 @@ app.post('/images', upload.single('image'), (req, res) => {
   const fileName = file.name;
 
   // S3 URL of the uploaded file
-  const s3Url = `https://${bucketName}.s3.${AWS.config.region}.amazonaws.com/${fileName}`;
+  const s3Url = `https://my-cool-bucke.s3.us-east-1.amazonaws.com/${fileName}`;
 
   res.status(200).json({ message: 'File uploaded successfully', url: s3Url });
 });
