@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Movie API</title>
+  </head>
+  <body>
+    <h1>myFlix</h1>
+    <h2>Introduction</h2>
+    <p>
+      myFlix is a Node.js and Express application that provides users with
+      access to information about different movies, directors, and genres. Users
+      will be able to sign up, update their personal information, and create a
+      list of their favorite movies.
+    </p>
+    <h2>Endpoints</h2>
+      <table>
+        <tr>
+          <th>Request</th>
+          <th>URL</th>
+          <th>Method</th>
+        </tr>
+        <tr>
+          <td>Login</td>
+          <td>/login</td>
+          <td>POST</td>
+        </tr>
+        <tr>
+          <td>Return a list of ALL movies to the user</td>
+          <td>/movies</td>
+          <td>GET</td>
+        </tr>
+        <tr>
+          <td>Return data about a single movie by title to the user</td>
+          <td>/movies/:title</td>
+          <td>GET</td>
+        </tr>
+        <tr>
+          <td>Return genre description by searching genre name/title</td>
+          <td>/genres/:name</td>
+          <td>GET</td>
+        </tr>
+        <tr>
+          <td>Return data about a director (bio, birth year, death year) by name</td>
+          <td>/directors/:name</td>
+          <td>GET</td>
+        </tr>
+        <tr>
+          <td>Allow new users to register</td>
+          <td>/users</td>
+          <td>POST</td>
+        </tr>
+        <tr>
+          <td>Allow users to update their user info</td>
+          <td>/users/:id/</td>
+          <td>PUT</td>
+        </tr>
+        <tr>
+          <td>Allow users to add a movie to their list of favorites</td>
+          <td>/users/:id/movies/:movieId</td>
+          <td>POST</td>
+        </tr>
+        <tr>
+          <td>Allow users to remove a movie from their list of favorites</td>
+          <td>/favorites/:title</td>
+          <td>DELETE</td>
+        </tr>
+        <tr>
+          <td>Allow existing users to deregister</td>
+          <td>/users/:id</td>
+          <td>DELETE</td>
+        </tr>
+      </table>
+    <h2>Endpoints in detail</h2>
+    <h3>User login</h3>
+      <div>
+        <p>Using https://movies-app1-3d6bd65a6f09.herokuapp.com/login will authenticate the user and return a JSON object listing all the user data and their issued JWT to access the rest of the site.</p>
+      </div>
+    <h3>Return a list of ALL movies to the user</h3>
+      <div>
+        <p>Using https://movies-app1-3d6bd65a6f09.herokuapp.com/movies will return an array of movie objects in JSON format. The method type is GET and has no response body. The query requires no parameters.</p>
+      </div>
+    <h3>Return data about a single movie by title to the user</h3>
+      <div>
+        <p>Using https://movies-app1-3d6bd65a6f09.herokuapp.com/movies/:title will return a JSON object that includes information about a single movie. The method type is GET and has no response body. The query requires a movie title (Ex: Spirited Away) as a parameter written without quotation marks. An example of the URL with the parameter is https://movies-app1-3d6bd65a6f09.herokuapp.com/movies/Spirited%20Away.</p>
+      </div>
+    <h3>Return genre description by searching genre name/title</h3>
+      <div>
+        <p>Using https://movies-app1-3d6bd65a6f09.herokuapp.com/genres/:name will return a JSON response. The method type is GET and has no response body. The query requires a genre name (Ex: Drama) as a parameter written without quotation marks. An example of the URL with the parameter is https://movies-app1-3d6bd65a6f09.herokuapp.com/genres/Drama, which would return the response, "In film and television, drama is a category or genre of narrative fiction (or semi-fiction) intended to be more serious than humorous in tone."</p>
+      </div>
+    <h3>Return data about a director (bio, birth year, death year) by name</h3>
+      <div>
+        <p>Using https://movies-app1-3d6bd65a6f09.herokuapp.com/directors/:name will return a JSON object with the director information. The method type is GET and has no response body. The query requires a director name (Ex: "Steven Spielberg") as a parameter written without quotation marks. An example of the URL with the parameter is https://movies-app1-3d6bd65a6f09.herokuapp.com/directors/Steven%20Spielberg, which would return a JSON object with Steven Spielberg's information.</p>
+      </div>
+    <h3>Allow new users to register</h3>
+      <div>
+        <p>Using https://movies-app1-3d6bd65a6f09.herokuapp.com/users with the POST method will return a JSON object showing the new user's information (as well as an automated ID). The response body must be a JSON object in the following format: 
+          <code>{
+            "Username": String,
+            "Password": String,
+            "Email": String,
+            "Birthday": Date
+        }</code>. The query requires no parameter. Entering a valid JSON object in the request body will return the JSON response object. An example of a valid entry is: 
+        <code>{
+          "Username": "NewUser",
+          "Password": "543",
+          "Email": "new@email.com",
+          "Birthday": "1960-04-29"
+      }</code>.
+      </p>
+      </div>
+    <h3>Allow users to update their user info</h3>
+      <div>
+        <p>Using https://movies-app1-3d6bd65a6f09.herokuapp.com/users/:id/ with the PUT method will return a JSON object displaying all of the user's updated information. An already registered username is required as the parameter, and the request must include a request body in the following format: 
+          <code>{
+            Username: String,
+            (required)
+            Password: String,
+            (required)
+            Email: String,
+            (required)
+            Birthday: Date
+          }</code>. 
+          For example, https://movies-app1-3d6bd65a6f09.herokuapp.com/users/existingUser could have a request body as follows: 
+          <code>{
+            "Username": "existingUser",
+            "Password": "newOne",
+            "Email": "update@email.com",
+            "Birthday": "2023-09-09"
+          }</code>.
+          A successful response returns all the existing user data, which will include the updated sections.
+        </p>
+      </div>
+    <h3>Allow users to add a movie to their list of favorites</h3>
+      <div>
+        <p>Using https://movies-app1-3d6bd65a6f09.herokuapp.com/users/:id/movies/:movieId with the POST method will return a JSON object with all of that user's data, including their expanded favorite movies list. The query has no body but must include an existing user ID and a movie ID as parameters. The example https://movies-app1-3d6bd65a6f09.herokuapp.com/users/CoolKid/movies/649a271eef2156d71e630260 would return a JSON object displaying all of the user CoolKid's data, along with the new favorite movie.</p>
+      </div> 
+    <h3>Allow users to remove a movie from their list of favorites</h3>
+      <div>
+        <p>Using https://movies-app1-3d6bd65a6f09.herokuapp.com/users/:id/movies/:movieId with the DELETE method will return a JSON object with the user's updated data. If they do not have the specified movie in their favorites list, the query will return "Movie ID not found." No response body is required. The query requires a user ID and movie ID as a parameter. The example https://movies-app1-3d6bd65a6f09.herokuapp.com/users/CoolKid/movies/649a2c62ef2156d71e630269 would return a JSON object with the user's updated data.</p>
+      </div>
+    <h3>Allow existing users to deregister</h3>
+      <div>
+        <p>Using https://movies-app1-3d6bd65a6f09.herokuapp.com/users/:id with the DELETE method will return the HTML response: "{Id} was deleted." No response body is required. The query requires the username as a parameter. The example https://movies-app1-3d6bd65a6f09.herokuapp.com/users/CoolKid would return the HTML response,"CoolKid was deleted." If the user ID does not exist, it will instead return "{id} was not found."</p>
+      </div>
+  </body>
+</html>
