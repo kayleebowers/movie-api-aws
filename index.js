@@ -10,11 +10,11 @@ const {
   S3Client,
   ListObjectsV2Command,
   PutObjectCommand,
+  GetObjectCommand,
 } = require("@aws-sdk/client-s3");
 require("dotenv").config();
-const fileUpload = require('express-fileupload');
-const multer = require('multer');
-const multerS3 = require('multer-s3');
+const multer = require("multer");
+const multerS3 = require("multer-s3");
 
 const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID;
 const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY;
@@ -49,10 +49,13 @@ require("./passport");
 /**
  * connect mongoose to online database
  */
-mongoose.connect("mongodb+srv://MoviesDBAdmin:9KUlkRsXODIUf0mv@moviesdb.ybzyezj.mongodb.net/myFlixDB?retryWrites=true&w=majority", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+mongoose.connect(
+  "mongodb+srv://MoviesDBAdmin:9KUlkRsXODIUf0mv@moviesdb.ybzyezj.mongodb.net/myFlixDB?retryWrites=true&w=majority",
+  {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  }
+);
 
 /**
  * create write stream
@@ -65,6 +68,7 @@ const logStream = fs.createWriteStream(path.join(__dirname, "log.txt"), {
  * use Morgan to log requests to server
  */
 app.use(morgan("common", { stream: logStream }));
+// app.use(fileUpload());
 
 // AWS config and endpoints
 const s3Client = new S3Client({
@@ -85,7 +89,7 @@ app.get("/images", (req, res) => {
   s3Client
     .send(new ListObjectsV2Command(listObjectsParams))
     .then((listObjectsResponse) => {
-      res.setHeader("Content-Type", "application/json"); 
+      res.setHeader("Content-Type", "application/json");
       res.json(listObjectsResponse);
     })
     .catch((error) => {
@@ -94,33 +98,45 @@ app.get("/images", (req, res) => {
     });
 });
 
-// Multer middleware for file upload to S3
-const upload = multer({
-  storage: multerS3({
-    s3: s3Client,
-    bucket: "my-cool-bucke",
-    acl: 'public-read',
-    key: function (req, file, cb) {
-      cb(null, Date.now().toString() + file.originalname);
-    },
-  }),
-});
+const storage = multer.memoryStorage(); // Store the file in memory
+const upload = multer({ storage });
 
-app.use(fileUpload());
-
-app.post('/images', upload.single('image'), (req, res) => {
+app.post("/images", upload.single("file"), (req, res) => {
   // Check if file is present
-  if (!req.files || Object.keys(req.files).length === 0) {
-    return res.status(400).send('No files were uploaded.');
+  if (!req.file) {
+    return res.status(400).send("No file was uploaded.");
   }
 
-  const file = req.files.image;
-  const fileName = file.name;
+  const file = req.file;
+  const fileName = file.originalname;
 
   // S3 URL of the uploaded file
   const s3Url = `https://my-cool-bucke.s3.us-east-1.amazonaws.com/${fileName}`;
+  console.log("Request Body:", req.body);
+  console.log("Uploaded File:", req.file);
+  res.status(200).json({ message: "File uploaded successfully", url: s3Url });
+});
 
-  res.status(200).json({ message: 'File uploaded successfully', url: s3Url });
+app.get("/images/:key", async (req, res) => {
+  const key = req.params.key;
+  try {
+    const { Body, ContentType } = await s3Client.send(
+      new GetObjectCommand({
+        Bucket: "my-cool-bucke",
+        Key: key,
+      })
+    );
+
+    // Set the appropriate headers for image response
+    res.setHeader("Content-Type", ContentType);
+
+    // Pipe the image data directly to the response
+    Body.pipe(res);
+    
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Error retrieving object from S3");
+  }
 });
 
 /**
