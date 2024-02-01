@@ -77,17 +77,37 @@ const s3Client = new S3Client({
   region: "us-east-1",
 });
 
-const listObjectsParams = {
-  Bucket: "my-cool-bucke",
+const listOriginalPhotosParams = {
+  Bucket: "cf-thumbnail-bucket",
 };
 
-listObjectsCmd = new ListObjectsV2Command(listObjectsParams);
+const listThumbnailResizesParams = {
+  Bucket: "cf-2-5-lambda-bucket",
+};
+
+listObjectsCmd = new ListObjectsV2Command(listOriginalPhotosParams);
 s3Client.send(listObjectsCmd);
 
+// get original images
 app.get("/images", (req, res) => {
-  listObjectsParams;
+  listOriginalPhotosParams;
   s3Client
-    .send(new ListObjectsV2Command(listObjectsParams))
+    .send(new ListObjectsV2Command(listOriginalPhotosParams))
+    .then((listObjectsResponse) => {
+      res.setHeader("Content-Type", "application/json");
+      res.json(listObjectsResponse);
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).json({ error: "The image get isn't working" });
+    });
+});
+
+// get resized thumbnails
+app.get("/thumbnails", (req, res) => {
+  listThumbnailResizesParams;
+  s3Client
+    .send(new ListObjectsV2Command(listThumbnailResizesParams))
     .then((listObjectsResponse) => {
       res.setHeader("Content-Type", "application/json");
       res.json(listObjectsResponse);
@@ -101,7 +121,8 @@ app.get("/images", (req, res) => {
 const storage = multer.memoryStorage(); // Store the file in memory
 const upload = multer({ storage });
 
-app.post("/images", upload.single("file"), (req, res) => {
+// post image to AWS bucket
+app.post("/images", upload.single("file"), async (req, res) => {
   // Check if file is present
   if (!req.file) {
     return res.status(400).send("No file was uploaded.");
@@ -110,19 +131,31 @@ app.post("/images", upload.single("file"), (req, res) => {
   const file = req.file;
   const fileName = file.originalname;
 
-  // S3 URL of the uploaded file
-  const s3Url = `https://my-cool-bucke.s3.us-east-1.amazonaws.com/${fileName}`;
-  console.log("Request Body:", req.body);
-  console.log("Uploaded File:", req.file);
-  res.status(200).json({ message: "File uploaded successfully", url: s3Url });
+  try {
+    // Set up parameters for S3 upload
+    const params = {
+      Bucket: "cf-thumbnail-bucket",
+      Key: `${fileName}`,
+      Body: file.buffer,
+      ContentType: "image/png",
+    };
+
+    // Upload to S3
+    const uploadResult = await s3Client.send(new PutObjectCommand(params));
+    console.log("File uploaded", uploadResult);
+  } catch (err) {
+    console.error(`Error resizing image: ${err}`);
+  }
+
 });
 
+// get single original image
 app.get("/images/:key", async (req, res) => {
   const key = req.params.key;
   try {
     const { Body, ContentType } = await s3Client.send(
       new GetObjectCommand({
-        Bucket: "my-cool-bucke",
+        Bucket: "cf-thumbnail-bucket",
         Key: key,
       })
     );
@@ -132,7 +165,6 @@ app.get("/images/:key", async (req, res) => {
 
     // Pipe the image data directly to the response
     Body.pipe(res);
-    
   } catch (err) {
     console.log(err);
     res.status(500).send("Error retrieving object from S3");
