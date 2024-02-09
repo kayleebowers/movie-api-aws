@@ -12,12 +12,8 @@ const {
   PutObjectCommand,
   GetObjectCommand,
 } = require("@aws-sdk/client-s3");
-require("dotenv").config();
 const multer = require("multer");
 const multerS3 = require("multer-s3");
-
-const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID;
-const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY;
 
 const app = express(),
   /**
@@ -72,8 +68,6 @@ app.use(morgan("common", { stream: logStream }));
 
 // AWS config and endpoints
 const s3Client = new S3Client({
-  accessKeyId: AWS_ACCESS_KEY_ID,
-  secretAccessKey: AWS_SECRET_ACCESS_KEY,
   region: "us-east-1",
 });
 
